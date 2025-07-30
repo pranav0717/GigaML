@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ride Dispatch System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .controls {
+            padding: 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            color: #495057;
+            min-width: 120px;
+        }
+
+        input[type="number"] {
+            padding: 10px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            width: 100px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button.secondary {
+            background: #6c757d;
+        }
+
+        button.secondary:hover {
+            background: #5a6268;
+            box-shadow: 0 5px 15px rgba(108, 117, 125, 0.4);
+        }
+
+        button.danger {
+            background: #dc3545;
+        }
+
+        button.danger:hover {
+            background: #c82333;
+            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4);
+        }
+
+        .grid-container {
+            padding: 30px;
+            display: flex;
+            gap: 30px;
+        }
+
+        .grid {
+            flex: 1;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            position: relative;
+        }
+
+        .grid-title {
+            font-size: 1.5em;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #495057;
+            text-align: center;
+        }
+
+        .grid-canvas {
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            background: white;
+            cursor: crosshair;
+        }
+
+        .info-panel {
+            width: 300px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .info-section {
+            margin-bottom: 25px;
+        }
+
+        .info-section h3 {
+            color: #495057;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .status {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status.available { background: #d4edda; color: #155724; }
+        .status.on_trip { background: #fff3cd; color: #856404; }
+        .status.waiting { background: #f8d7da; color: #721c24; }
+        .status.assigned { background: #d1ecf1; color: #0c5460; }
+        .status.completed { background: #d4edda; color: #155724; }
+
+        .legend {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #fff;
+        }
+
+        .tick-info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .tick-info h2 {
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+
+        .help-text {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+
+        .help-text p {
+            margin-bottom: 10px;
+            color: #495057;
+        }
+
+        .help-text ul {
+            margin: 0;
+            padding-left: 20px;
+            color: #6c757d;
+        }
+
+        .help-text li {
+            margin-bottom: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-container {
+                flex-direction: column;
+            }
+            
+            .info-panel {
+                width: 100%;
+            }
+            
+            .control-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .control-group label {
+                min-width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Ride Dispatch System</h1>
+            <p>Real-time simulation of a ride-hailing dispatch system</p>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <label>Driver X:</label>
+                <input type="number" id="driverX" value="10" min="0" max="99" title="X coordinate (0-99)">
+                <label>Driver Y:</label>
+                <input type="number" id="driverY" value="10" min="0" max="99" title="Y coordinate (0-99)">
+                <button onclick="addDriver()">Add Driver</button>
+                <button onclick="removeLastDriver()" class="secondary">Remove Last Driver</button>
+            </div>
+
+            <div class="control-group">
+                <label>Pickup X:</label>
+                <input type="number" id="pickupX" value="20" min="0" max="99" title="Pickup X coordinate">
+                <label>Pickup Y:</label>
+                <input type="number" id="pickupY" value="20" min="0" max="99" title="Pickup Y coordinate">
+                <label>Dropoff X:</label>
+                <input type="number" id="dropoffX" value="30" min="0" max="99" title="Dropoff X coordinate">
+                <label>Dropoff Y:</label>
+                <input type="number" id="dropoffY" value="30" min="0" max="99" title="Dropoff Y coordinate">
+                <button onclick="addRider()">Add Rider</button>
+                <button onclick="removeLastRider()" class="secondary">Remove Last Rider</button>
+            </div>
+
+            <div class="control-group">
+                <button onclick="requestRide()">Request Ride</button>
+                <button onclick="advanceTick()" class="secondary">Next Tick</button>
+                <button onclick="clearAll()" class="danger">Clear All</button>
+            </div>
+
+            <div class="control-group">
+                <label>Dispatch Algorithm:</label>
+                <select id="algorithmSelect" onchange="changeAlgorithm()" title="Choose how drivers are assigned to rides">
+                    <option value="balanced">Balanced (ETA + Fairness)</option>
+                    <option value="eta_only">ETA Only</option>
+                    <option value="fairness_only">Fairness Only</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="grid-container">
+            <div class="grid">
+                <div class="grid-title">City Grid (100x100)</div>
+                <canvas id="gridCanvas" class="grid-canvas" width="600" height="600"></canvas>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #007bff;"></div>
+                        <span>Driver</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #28a745;"></div>
+                        <span>Rider</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ffc107;"></div>
+                        <span>Pickup</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #dc3545;"></div>
+                        <span>Dropoff</span>
+                    </div>
+                </div>
+                <div class="help-text">
+                    <p><strong>How to use:</strong></p>
+                    <ul>
+                        <li>Click anywhere on the grid to set coordinates</li>
+                        <li>Add drivers and riders using the controls above</li>
+                        <li>Request rides to see dispatch logic in action</li>
+                        <li>Use "Next Tick" to advance time and watch movement</li>
+                        <li>Try different dispatch algorithms to see the difference</li>
+                    </ul>
+                </div>
+            </div>
+
+                    <div class="info-panel">
+            <div class="tick-info">
+                <h2 id="tickDisplay">0</h2>
+                <p>Current Tick</p>
+            </div>
+
+            <div class="info-section">
+                <h3>System Metrics</h3>
+                <div id="metricsDisplay"></div>
+            </div>
+
+            <div class="info-section">
+                <h3>Drivers</h3>
+                <div id="driversList"></div>
+            </div>
+
+            <div class="info-section">
+                <h3>Riders</h3>
+                <div id="ridersList"></div>
+            </div>
+
+            <div class="info-section">
+                <h3>Ride Requests</h3>
+                <div id="requestsList"></div>
+            </div>
+
+            <div class="info-section">
+                <h3>Actions</h3>
+                <button onclick="rejectRandomRide()" class="secondary" style="width: 100%; margin-bottom: 10px;">Reject Random Ride</button>
+                <button onclick="showDispatchInfo()" class="secondary" style="width: 100%; margin-bottom: 10px;">Show Dispatch Logic</button>
+                <button onclick="runPerformanceTest()" class="secondary" style="width: 100%;">Run Performance Test</button>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        const GRID_SIZE = 100;
+        const CANVAS_SIZE = 600;
+        const CELL_SIZE = CANVAS_SIZE / GRID_SIZE;
+
+        let canvas, ctx;
+        let systemState = {
+            tick: 0,
+            drivers: [],
+            riders: [],
+            ride_requests: []
+        };
+
+        function init() {
+            canvas = document.getElementById('gridCanvas');
+            ctx = canvas.getContext('2d');
+            
+            canvas.addEventListener('click', handleGridClick);
+            loadSystemState();
+            loadCurrentAlgorithm();
+        }
+
+        function handleGridClick(event) {
+            const rect = canvas.getBoundingClientRect();
+            const x = Math.floor((event.clientX - rect.left) / CELL_SIZE);
+            const y = Math.floor((event.clientY - rect.top) / CELL_SIZE);
+            
+            if (x >= 0 && x < GRID_SIZE && y >= 0 && y < GRID_SIZE) {
+                document.getElementById('driverX').value = x;
+                document.getElementById('driverY').value = y;
+                document.getElementById('pickupX').value = x;
+                document.getElementById('pickupY').value = y;
+            }
+        }
+
+        async function loadSystemState() {
+            try {
+                const response = await fetch(`${API_BASE}/state`);
+                systemState = await response.json();
+                updateDisplay();
+            } catch (error) {
+                console.error('Error loading system state:', error);
+            }
+        }
+
+        function updateDisplay() {
+            document.getElementById('tickDisplay').textContent = systemState.tick;
+            drawGrid();
+            updateDriversList();
+            updateRidersList();
+            updateRequestsList();
+            updateMetrics();
+        }
+
+        function drawGrid() {
+            ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+            
+            // Draw major grid lines every 10 units
+            for (let i = 0; i <= GRID_SIZE; i += 10) {
+                ctx.strokeStyle = '#e9ecef';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(i * CELL_SIZE, 0);
+                ctx.lineTo(i * CELL_SIZE, CANVAS_SIZE);
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.moveTo(0, i * CELL_SIZE);
+                ctx.lineTo(CANVAS_SIZE, i * CELL_SIZE);
+                ctx.stroke();
+            }
+            
+            // Add coordinate labels
+            ctx.fillStyle = '#6c757d';
+            ctx.font = '10px Arial';
+            ctx.textAlign = 'left';
+            
+            for (let i = 0; i <= GRID_SIZE; i += 20) {
+                ctx.fillText(i.toString(), i * CELL_SIZE + 2, 12);
+                ctx.fillText(i.toString(), 2, i * CELL_SIZE + 12);
+            }
+
+            systemState.drivers.forEach(driver => {
+                drawDriver(driver);
+            });
+
+            systemState.riders.forEach(rider => {
+                drawRider(rider);
+            });
+
+            systemState.ride_requests.forEach(request => {
+                if (request.status === 'waiting' || request.status === 'assigned') {
+                    drawPickup(request.pickup_location);
+                    drawDropoff(request.dropoff_location);
+                }
+            });
+        }
+
+        function drawDriver(driver) {
+            const x = driver.location.x * CELL_SIZE + CELL_SIZE / 2;
+            const y = driver.location.y * CELL_SIZE + CELL_SIZE / 2;
+            
+            ctx.fillStyle = driver.status === 'available' ? '#007bff' : '#ffc107';
+            ctx.beginPath();
+            ctx.arc(x, y, CELL_SIZE / 3, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            ctx.fillStyle = '#fff';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('D', x, y + 4);
+        }
+
+        function drawRider(rider) {
+            const x = rider.pickup_location.x * CELL_SIZE + CELL_SIZE / 2;
+            const y = rider.pickup_location.y * CELL_SIZE + CELL_SIZE / 2;
+            
+            ctx.fillStyle = '#28a745';
+            ctx.beginPath();
+            ctx.arc(x, y, CELL_SIZE / 3, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            ctx.fillStyle = '#fff';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('R', x, y + 4);
+        }
+
+        function drawPickup(location) {
+            const x = location.x * CELL_SIZE + CELL_SIZE / 2;
+            const y = location.y * CELL_SIZE + CELL_SIZE / 2;
+            
+            ctx.fillStyle = '#ffc107';
+            ctx.beginPath();
+            ctx.arc(x, y, CELL_SIZE / 4, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            ctx.fillStyle = '#000';
+            ctx.font = '10px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('P', x, y + 3);
+        }
+
+        function drawDropoff(location) {
+            const x = location.x * CELL_SIZE + CELL_SIZE / 2;
+            const y = location.y * CELL_SIZE + CELL_SIZE / 2;
+            
+            ctx.fillStyle = '#dc3545';
+            ctx.beginPath();
+            ctx.arc(x, y, CELL_SIZE / 4, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            ctx.fillStyle = '#fff';
+            ctx.font = '10px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('D', x, y + 3);
+        }
+
+        function updateDriversList() {
+            const container = document.getElementById('driversList');
+            container.innerHTML = '';
+            
+            systemState.drivers.forEach(driver => {
+                const div = document.createElement('div');
+                div.className = 'info-item';
+                const location = `(${driver.location.x}, ${driver.location.y})`;
+                div.innerHTML = `
+                    <span>Driver ${driver.id.slice(0, 8)}</span>
+                    <span class="status ${driver.status}">${driver.status}</span>
+                    <span style="font-size: 12px; color: #6c757d;">${location}</span>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function updateRidersList() {
+            const container = document.getElementById('ridersList');
+            container.innerHTML = '';
+            
+            systemState.riders.forEach(rider => {
+                const div = document.createElement('div');
+                div.className = 'info-item';
+                const pickup = `(${rider.pickup_location.x}, ${rider.pickup_location.y})`;
+                const dropoff = `(${rider.dropoff_location.x}, ${rider.dropoff_location.y})`;
+                div.innerHTML = `
+                    <span>Rider ${rider.id.slice(0, 8)}</span>
+                    <div style="font-size: 12px; color: #6c757d;">
+                        <div>Pickup: ${pickup}</div>
+                        <div>Dropoff: ${dropoff}</div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function updateRequestsList() {
+            const container = document.getElementById('requestsList');
+            container.innerHTML = '';
+            
+            systemState.ride_requests.forEach(request => {
+                const div = document.createElement('div');
+                div.className = 'info-item';
+                div.innerHTML = `
+                    <span>Request ${request.id.slice(0, 8)}</span>
+                    <span class="status ${request.status}">${request.status}</span>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        async function updateMetrics() {
+            try {
+                const response = await fetch(`${API_BASE}/metrics`);
+                const metrics = await response.json();
+                
+                const container = document.getElementById('metricsDisplay');
+                container.innerHTML = `
+                    <div class="info-item">
+                        <span>Completion Rate</span>
+                        <span>${metrics.completion_rate_percent}%</span>
+                    </div>
+                    <div class="info-item">
+                        <span>Driver Utilization</span>
+                        <span>${metrics.driver_utilization_percent}%</span>
+                    </div>
+                    <div class="info-item">
+                        <span>System Efficiency</span>
+                        <span>${metrics.system_efficiency}%</span>
+                    </div>
+                    <div class="info-item">
+                        <span>Average ETA</span>
+                        <span>${metrics.average_eta}</span>
+                    </div>
+                    <div class="info-item">
+                        <span>Algorithm</span>
+                        <span>${metrics.dispatch_algorithm}</span>
+                    </div>
+                    <div class="info-item">
+                        <span>Completed Rides</span>
+                        <span>${metrics.completed_rides}/${metrics.total_requests}</span>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error loading metrics:', error);
+            }
+        }
+
+        async function rejectRandomRide() {
+            const assignedRequests = systemState.ride_requests.filter(req => 
+                req.status === 'assigned' && req.assigned_driver_id
+            );
+            
+            if (assignedRequests.length === 0) {
+                alert('No assigned rides to reject!');
+                return;
+            }
+            
+            const randomRequest = assignedRequests[Math.floor(Math.random() * assignedRequests.length)];
+            const driverId = randomRequest.assigned_driver_id;
+            
+            try {
+                await fetch(`${API_BASE}/ride-requests/${randomRequest.id}/reject`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ driver_id: driverId })
+                });
+                loadSystemState();
+                alert(`Rejected ride request ${randomRequest.id.slice(0, 8)} from driver ${driverId.slice(0, 8)}`);
+            } catch (error) {
+                console.error('Error rejecting ride:', error);
+                alert('Error rejecting ride');
+            }
+        }
+
+        function showDispatchInfo() {
+            alert(`Dispatch Algorithm:
+            
+Scoring Formula: total_score = eta + (fairness_penalty * 0.5)
+
+ETA: Euclidean distance from driver to pickup
+Fairness: Number of completed rides by driver
+Goal: Lower scores = higher priority
+
+Fallback: If driver rejects, automatically retry with next-best driver
+
+This balances:
+• Low ETA (closest drivers)
+• Fairness (even distribution)
+• Efficiency (maximize completed rides)`);
+        }
+
+        async function changeAlgorithm() {
+            const algorithm = document.getElementById('algorithmSelect').value;
+            
+            try {
+                const response = await fetch(`${API_BASE}/dispatch-algorithm`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ algorithm: algorithm })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    alert(`Algorithm changed to: ${result.current_algorithm}`);
+                    loadSystemState();
+                } else {
+                    alert('Error changing algorithm');
+                }
+            } catch (error) {
+                console.error('Error changing algorithm:', error);
+                alert('Error changing algorithm');
+            }
+        }
+
+        async function loadCurrentAlgorithm() {
+            try {
+                const response = await fetch(`${API_BASE}/dispatch-algorithm`);
+                const data = await response.json();
+                document.getElementById('algorithmSelect').value = data.current_algorithm;
+            } catch (error) {
+                console.error('Error loading current algorithm:', error);
+            }
+        }
+
+        async function runPerformanceTest() {
+            if (!confirm('This will clear the current system and run a performance test. Continue?')) {
+                return;
+            }
+            
+            // Clear current system
+            await clearAll();
+            
+            // Add test drivers
+            for (let i = 0; i < 5; i++) {
+                await fetch(`${API_BASE}/drivers`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ x: i * 10, y: i * 10 })
+                });
+            }
+            
+            // Add test riders
+            for (let i = 0; i < 3; i++) {
+                await fetch(`${API_BASE}/riders`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        pickup_location: { x: 20 + i * 15, y: 20 + i * 15 },
+                        dropoff_location: { x: 30 + i * 15, y: 30 + i * 15 }
+                    })
+                });
+            }
+            
+            // Test each algorithm
+            const algorithms = ['balanced', 'eta_only', 'fairness_only'];
+            const results = {};
+            
+            for (const algorithm of algorithms) {
+                // Set algorithm
+                await fetch(`${API_BASE}/dispatch-algorithm`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ algorithm: algorithm })
+                });
+                
+                // Create ride requests
+                const riders = await fetch(`${API_BASE}/riders`).then(r => r.json());
+                for (const rider of riders) {
+                    await fetch(`${API_BASE}/ride-requests`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ rider_id: rider.id })
+                    });
+                }
+                
+                // Advance time to complete rides
+                for (let i = 0; i < 20; i++) {
+                    await fetch(`${API_BASE}/tick`, { method: 'POST' });
+                }
+                
+                // Get final metrics
+                const metrics = await fetch(`${API_BASE}/metrics`).then(r => r.json());
+                results[algorithm] = {
+                    completion_rate: metrics.completion_rate_percent,
+                    efficiency: metrics.system_efficiency,
+                    average_eta: metrics.average_eta
+                };
+            }
+            
+            // Display results
+            alert(`Performance Test Results:
+            
+Balanced Algorithm:
+- Completion Rate: ${results.balanced.completion_rate}%
+- System Efficiency: ${results.balanced.efficiency}%
+- Average ETA: ${results.balanced.average_eta}
+
+ETA Only Algorithm:
+- Completion Rate: ${results.eta_only.completion_rate}%
+- System Efficiency: ${results.eta_only.efficiency}%
+- Average ETA: ${results.eta_only.average_eta}
+
+Fairness Only Algorithm:
+- Completion Rate: ${results.fairness_only.completion_rate}%
+- System Efficiency: ${results.fairness_only.efficiency}%
+- Average ETA: ${results.fairness_only.average_eta}
+
+The balanced algorithm typically provides the best overall performance.`);
+            
+            loadSystemState();
+        }
+
+        async function addDriver() {
+            const x = parseInt(document.getElementById('driverX').value);
+            const y = parseInt(document.getElementById('driverY').value);
+            
+            try {
+                await fetch(`${API_BASE}/drivers`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ x, y })
+                });
+                loadSystemState();
+            } catch (error) {
+                console.error('Error adding driver:', error);
+            }
+        }
+
+        async function addRider() {
+            const pickupX = parseInt(document.getElementById('pickupX').value);
+            const pickupY = parseInt(document.getElementById('pickupY').value);
+            const dropoffX = parseInt(document.getElementById('dropoffX').value);
+            const dropoffY = parseInt(document.getElementById('dropoffY').value);
+            
+            try {
+                await fetch(`${API_BASE}/riders`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        pickup_location: { x: pickupX, y: pickupY },
+                        dropoff_location: { x: dropoffX, y: dropoffY }
+                    })
+                });
+                loadSystemState();
+            } catch (error) {
+                console.error('Error adding rider:', error);
+            }
+        }
+
+        async function removeLastDriver() {
+            if (systemState.drivers.length === 0) {
+                alert('No drivers to remove!');
+                return;
+            }
+            
+            const lastDriver = systemState.drivers[systemState.drivers.length - 1];
+            
+            try {
+                await fetch(`${API_BASE}/drivers/${lastDriver.id}`, { method: 'DELETE' });
+                loadSystemState();
+                alert(`Removed driver ${lastDriver.id.slice(0, 8)}`);
+            } catch (error) {
+                console.error('Error removing driver:', error);
+                alert('Error removing driver');
+            }
+        }
+
+        async function removeLastRider() {
+            if (systemState.riders.length === 0) {
+                alert('No riders to remove!');
+                return;
+            }
+            
+            const lastRider = systemState.riders[systemState.riders.length - 1];
+            
+            try {
+                await fetch(`${API_BASE}/riders/${lastRider.id}`, { method: 'DELETE' });
+                loadSystemState();
+                alert(`Removed rider ${lastRider.id.slice(0, 8)}`);
+            } catch (error) {
+                console.error('Error removing rider:', error);
+                alert('Error removing rider');
+            }
+        }
+
+        async function requestRide() {
+            if (systemState.riders.length === 0) {
+                alert('Please add a rider first!');
+                return;
+            }
+            
+            const rider = systemState.riders[0];
+            
+            try {
+                await fetch(`${API_BASE}/ride-requests`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ rider_id: rider.id })
+                });
+                loadSystemState();
+            } catch (error) {
+                console.error('Error requesting ride:', error);
+            }
+        }
+
+        async function advanceTick() {
+            try {
+                await fetch(`${API_BASE}/tick`, { method: 'POST' });
+                loadSystemState();
+            } catch (error) {
+                console.error('Error advancing tick:', error);
+            }
+        }
+
+        async function clearAll() {
+            if (!confirm('Are you sure you want to clear all data?')) return;
+            
+            try {
+                for (const driver of systemState.drivers) {
+                    await fetch(`${API_BASE}/drivers/${driver.id}`, { method: 'DELETE' });
+                }
+                for (const rider of systemState.riders) {
+                    await fetch(`${API_BASE}/riders/${rider.id}`, { method: 'DELETE' });
+                }
+                loadSystemState();
+            } catch (error) {
+                console.error('Error clearing data:', error);
+            }
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html> 
